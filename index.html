@@ -98,4 +98,475 @@
         /* Canvas */
         .canvas-container {
             background: var(--panel);
-            padding: 10
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 8 / 5; /* Maintains internal proportions */
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: block;
+        }
+
+        /* Controls Panel */
+        .panel {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-sizing: border-box;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .input-group label { font-weight: bold; font-size: 0.9rem; }
+        .input-group input {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .start-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        /* Outputs */
+        .outputs {
+            margin-top: 10px;
+            padding-top: 20px;
+            border-top: 2px dashed var(--border);
+        }
+        .out-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .out-val { font-family: monospace; font-weight: bold; color: var(--primary); }
+
+        .speed-toggle {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .speed-toggle label { font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    </style>
+</head>
+<body>
+
+    <!-- Main Menu -->
+    <div id="menu-screen">
+        <h1>HKDSE Physics: Projectile Motion</h1>
+        <p>Select a simulation to begin</p>
+        <button class="menu-btn" onclick="openSim(1)">1. Horizontal Projection</button>
+        <button class="menu-btn" onclick="openSim(2)">2. Angle of Elevation</button>
+        <button class="menu-btn" onclick="openSim(3)">3. Monkey and Hunter</button>
+    </div>
+
+    <!-- Simulation Screen -->
+    <div id="sim-screen">
+        <div class="header">
+            <button class="back-btn" onclick="goMenu()">← Back to Menu</button>
+            <h2 id="sim-title">Simulation Title</h2>
+            <div style="width: 140px; display: none;"></div> <!-- Spacer for flex balance -->
+        </div>
+
+        <div class="container">
+            <div class="canvas-container">
+                <canvas id="simCanvas" width="800" height="500"></canvas>
+            </div>
+
+            <div class="panel">
+                <h3 style="margin-bottom: 0;">Controls</h3>
+                
+                <!-- Inputs for Sim 1 -->
+                <div id="controls-1" style="display: none; flex-direction: column; gap: 10px;">
+                    <div class="input-group">
+                        <label>Initial Speed, u (m/s)</label>
+                        <input type="number" id="s1-u" value="20" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Initial Height, h (m)</label>
+                        <input type="number" id="s1-h" value="45" step="1">
+                    </div>
+                </div>
+
+                <!-- Inputs for Sim 2 -->
+                <div id="controls-2" style="display: none; flex-direction: column; gap: 10px;">
+                    <div class="input-group">
+                        <label>Initial Speed, u (m/s)</label>
+                        <input type="number" id="s2-u" value="30" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Angle of Elevation, θ (°)</label>
+                        <input type="number" id="s2-angle" value="45" step="1">
+                    </div>
+                </div>
+
+                <!-- Inputs for Sim 3 -->
+                <div id="controls-3" style="display: none; flex-direction: column; gap: 10px;">
+                    <p style="font-size:0.85rem; color:#64748b; margin: 0 0 5px 0; line-height: 1.4;">
+                        The hunter aims directly at the monkey. The monkey falls exactly when the gun is fired. 
+                        Adjust bullet speed to see if it always hits!
+                    </p>
+                    <div class="input-group">
+                        <label>Horiz. Distance to Monkey (m)</label>
+                        <input type="number" id="s3-d" value="50" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Initial Height of Monkey (m)</label>
+                        <input type="number" id="s3-h" value="30" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Bullet Initial Speed, u (m/s)</label>
+                        <input type="number" id="s3-u" value="40" step="1">
+                    </div>
+                </div>
+
+                <!-- Common Controls -->
+                <div class="input-group">
+                    <label>Gravity, g (m/s²)</label>
+                    <input type="number" id="common-g" value="9.81" step="0.1">
+                </div>
+
+                <div class="input-group">
+                    <label>Simulation Speed</label>
+                    <div class="speed-toggle">
+                        <label><input type="radio" name="speed" value="0.25"> 0.25x</label>
+                        <label><input type="radio" name="speed" value="1" checked> 1x</label>
+                        <label><input type="radio" name="speed" value="2"> 2x</label>
+                    </div>
+                </div>
+
+                <button class="start-btn" onclick="startSimulation()">Start / Reset</button>
+
+                <!-- Output Panel -->
+                <div class="outputs" id="output-panel">
+                    <h3 style="margin-top: 0;">Real-time Data</h3>
+                    <div class="out-row"><span>Time (t):</span> <span class="out-val" id="out-t">0.00 s</span></div>
+                    <div class="out-row"><span>Horizontal Disp. (x):</span> <span class="out-val" id="out-x">0.00 m</span></div>
+                    <div class="out-row"><span>Vertical Disp. (y):</span> <span class="out-val" id="out-y">0.00 m</span></div>
+                    <div class="out-row"><span>Horiz. Velocity (v_x):</span> <span class="out-val" id="out-vx">0.00 m/s</span></div>
+                    <div class="out-row"><span>Vert. Velocity (v_y):</span> <span class="out-val" id="out-vy">0.00 m/s</span></div>
+                    <div class="out-row"><span>Angle to Horiz. (θ):</span> <span class="out-val" id="out-theta">0.00 °</span></div>
+                    
+                    <div id="static-outputs" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top:10px;">
+                        <div class="out-row" id="row-range" style="display:none;"><span>Calculated Range:</span> <span class="out-val" id="out-range">0.00 m</span></div>
+                        <div class="out-row" id="row-maxh" style="display:none;"><span>Max Height (H):</span> <span class="out-val" id="out-maxh">0.00 m</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 1;
+        let isRunning = false;
+        let animFrameId = null;
+        
+        let t = 0;
+        let lastTime = 0;
+        let scale = 10; 
+        let trail = [];
+        let trail2 = []; 
+        let physParams = {};
+        
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const margin = 40;
+
+        function openSim(mode) {
+            currentMode = mode;
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('sim-screen').style.display = 'block';
+            
+            document.getElementById('controls-1').style.display = 'none';
+            document.getElementById('controls-2').style.display = 'none';
+            document.getElementById('controls-3').style.display = 'none';
+            document.getElementById('controls-' + mode).style.display = 'flex';
+            
+            const titles = {
+                1: "Horizontal Projection",
+                2: "Projectile with Angle of Elevation",
+                3: "Monkey and Hunter Experiment"
+            };
+            document.getElementById('sim-title').innerText = titles[mode];
+            
+            resetSimulation();
+        }
+
+        function goMenu() {
+            cancelAnimationFrame(animFrameId);
+            isRunning = false;
+            document.getElementById('sim-screen').style.display = 'none';
+            document.getElementById('menu-screen').style.display = 'flex';
+        }
+
+        function mapToCanvas(x, y) {
+            return {
+                cx: margin + x * scale,
+                cy: canvas.height - margin - y * scale
+            };
+        }
+
+        function resetSimulation() {
+            cancelAnimationFrame(animFrameId);
+            isRunning = false;
+            t = 0;
+            trail = [];
+            trail2 = [];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawAxes();
+            
+            document.getElementById('out-t').innerText = "0.00 s";
+            document.getElementById('out-x').innerText = "0.00 m";
+            document.getElementById('out-y').innerText = "0.00 m";
+            document.getElementById('out-vx').innerText = "0.00 m/s";
+            document.getElementById('out-vy').innerText = "0.00 m/s";
+            document.getElementById('out-theta').innerText = "0.00 °";
+            document.getElementById('row-range').style.display = 'none';
+            document.getElementById('row-maxh').style.display = 'none';
+        }
+
+        function startSimulation() {
+            resetSimulation();
+            
+            const g = parseFloat(document.getElementById('common-g').value);
+            physParams.g = g;
+
+            let maxExpectedX = 100;
+            let maxExpectedY = 100;
+
+            if (currentMode === 1) {
+                const u = parseFloat(document.getElementById('s1-u').value);
+                const h = parseFloat(document.getElementById('s1-h').value);
+                physParams = { u, h, g, type: 1 };
+                
+                const t_flight = Math.sqrt((2 * h) / g);
+                const range = u * t_flight;
+                
+                maxExpectedX = range * 1.2;
+                maxExpectedY = h * 1.5;
+
+                document.getElementById('row-range').style.display = 'flex';
+                document.getElementById('out-range').innerText = range.toFixed(2) + " m";
+
+            } else if (currentMode === 2) {
+                const u = parseFloat(document.getElementById('s2-u').value);
+                const deg = parseFloat(document.getElementById('s2-angle').value);
+                const rad = deg * Math.PI / 180;
+                physParams = { u, rad, g, type: 2 };
+                
+                const range = (u * u * Math.sin(2 * rad)) / g;
+                const maxH = (u * u * Math.sin(rad) * Math.sin(rad)) / (2 * g);
+                
+                maxExpectedX = range * 1.2;
+                maxExpectedY = maxH * 1.5;
+
+                document.getElementById('row-range').style.display = 'flex';
+                document.getElementById('row-maxh').style.display = 'flex';
+                document.getElementById('out-range').innerText = range.toFixed(2) + " m";
+                document.getElementById('out-maxh').innerText = maxH.toFixed(2) + " m";
+
+            } else if (currentMode === 3) {
+                const D = parseFloat(document.getElementById('s3-d').value);
+                const H = parseFloat(document.getElementById('s3-h').value);
+                const u = parseFloat(document.getElementById('s3-u').value);
+                
+                const rad = Math.atan(H / D); 
+                physParams = { D, H, u, rad, g, type: 3, hit: false };
+                
+                maxExpectedX = D * 1.2;
+                maxExpectedY = H * 1.5;
+            }
+
+            const scaleX = (canvas.width - 2 * margin) / (maxExpectedX || 1);
+            const scaleY = (canvas.height - 2 * margin) / (maxExpectedY || 1);
+            scale = Math.min(scaleX, scaleY);
+            
+            lastTime = performance.now();
+            isRunning = true;
+            animFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop(currentTime) {
+            if (!isRunning) return;
+
+            let speedMult = 1;
+            const radios = document.getElementsByName('speed');
+            for (let r of radios) {
+                if (r.checked) speedMult = parseFloat(r.value);
+            }
+
+            const dt = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+            t += dt * speedMult;
+
+            let stopSimulation = false;
+            let currentX = 0, currentY = 0, vx = 0, vy = 0;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawAxes();
+
+            if (physParams.type === 1) {
+                currentX = physParams.u * t;
+                currentY = physParams.h - 0.5 * physParams.g * t * t;
+                vx = physParams.u;
+                vy = -physParams.g * t;
+                
+                if (currentY <= 0) { currentY = 0; stopSimulation = true; }
+                trail.push({x: currentX, y: currentY});
+                drawTrail(trail, '--primary');
+                drawParticle(currentX, currentY, '--primary');
+
+            } else if (physParams.type === 2) {
+                currentX = physParams.u * Math.cos(physParams.rad) * t;
+                currentY = physParams.u * Math.sin(physParams.rad) * t - 0.5 * physParams.g * t * t;
+                vx = physParams.u * Math.cos(physParams.rad);
+                vy = physParams.u * Math.sin(physParams.rad) - physParams.g * t;
+
+                if (currentY <= 0 && t > 0.1) { currentY = 0; stopSimulation = true; }
+                trail.push({x: currentX, y: currentY});
+                drawTrail(trail, '--primary');
+                drawParticle(currentX, currentY, '--primary');
+
+                const maxT = (physParams.u * Math.sin(physParams.rad)) / physParams.g;
+                if (t >= maxT) {
+                    const maxX = physParams.u * Math.cos(physParams.rad) * maxT;
+                    const maxY = physParams.u * Math.sin(physParams.rad) * maxT - 0.5 * physParams.g * maxT * maxT;
+                    const pt = mapToCanvas(maxX, maxY);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath(); ctx.arc(pt.cx, pt.cy, 5, 0, Math.PI*2); ctx.fill();
+                    ctx.fillText("Max Height", pt.cx - 20, pt.cy - 12);
+                }
+
+            } else if (physParams.type === 3) {
+                // Bullet
+                currentX = physParams.u * Math.cos(physParams.rad) * t;
+                currentY = physParams.u * Math.sin(physParams.rad) * t - 0.5 * physParams.g * t * t;
+                vx = physParams.u * Math.cos(physParams.rad);
+                vy = physParams.u * Math.sin(physParams.rad) - physParams.g * t;
+                
+                // Monkey
+                let monkeyX = physParams.D;
+                let monkeyY = physParams.H - 0.5 * physParams.g * t * t;
+                if (monkeyY <= 0) monkeyY = 0; 
+
+                trail.push({x: currentX, y: currentY});
+                trail2.push({x: monkeyX, y: monkeyY});
+                
+                drawTrail(trail, '#2563eb');
+                drawTrail(trail2, '#b45309');
+                
+                // Target line
+                ctx.strokeStyle = "rgba(0,0,0,0.15)";
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                const origin = mapToCanvas(0,0);
+                const target = mapToCanvas(physParams.D, physParams.H);
+                ctx.moveTo(origin.cx, origin.cy);
+                ctx.lineTo(target.cx, target.cy);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                drawParticle(currentX, currentY, '#2563eb'); 
+                drawParticle(monkeyX, monkeyY, '#b45309', 8); 
+
+                // Collision Logic (Fixed instant stop bug by ensuring t > 0.1 for ground hits)
+                const dist = Math.sqrt(Math.pow(currentX - monkeyX, 2) + Math.pow(currentY - monkeyY, 2));
+                if (dist < 1.5) { 
+                    physParams.hit = true;
+                    stopSimulation = true;
+                    ctx.fillStyle = "red";
+                    ctx.font = "bold 20px Arial";
+                    const hitPt = mapToCanvas(monkeyX, monkeyY);
+                    ctx.fillText("BOOM! Hit!", hitPt.cx - 40, hitPt.cy - 15);
+                } else if ((currentY <= 0 && t > 0.1) || currentX > physParams.D * 1.5) {
+                    stopSimulation = true; 
+                }
+            }
+
+            document.getElementById('out-t').innerText = t.toFixed(2) + " s";
+            document.getElementById('out-x').innerText = currentX.toFixed(2) + " m";
+            document.getElementById('out-y').innerText = currentY.toFixed(2) + " m";
+            document.getElementById('out-vx').innerText = vx.toFixed(2) + " m/s";
+            document.getElementById('out-vy').innerText = vy.toFixed(2) + " m/s";
+            
+            let angle = Math.atan2(vy, vx) * 180 / Math.PI;
+            document.getElementById('out-theta').innerText = angle.toFixed(2) + " °";
+
+            if (!stopSimulation) {
+                animFrameId = requestAnimationFrame(gameLoop);
+            } else {
+                isRunning = false;
+            }
+        }
+
+        function drawAxes() {
+            ctx.strokeStyle = "#cbd5e1";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(margin, 10);
+            ctx.lineTo(margin, canvas.height - margin);
+            ctx.moveTo(margin, canvas.height - margin);
+            ctx.lineTo(canvas.width - 10, canvas.height - margin);
+            ctx.stroke();
+
+            ctx.fillStyle = "#64748b";
+            ctx.font = "12px sans-serif";
+            ctx.fillText("x (m)", canvas.width - 35, canvas.height - margin + 15);
+            ctx.fillText("y (m)", margin - 35, 20);
+            ctx.fillText("0", margin - 15, canvas.height - margin + 15);
+        }
+
+        function drawTrail(path, colorStr) {
+            if (path.length < 2) return;
+            ctx.strokeStyle = colorStr.startsWith('--') ? getComputedStyle(document.body).getPropertyValue(colorStr) : colorStr;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const first = mapToCanvas(path[0].x, path[0].y);
+            ctx.moveTo(first.cx, first.cy);
+            for (let i = 1; i < path.length; i++) {
+                const pt = mapToCanvas(path[i].x, path[i].y);
+                ctx.lineTo(pt.cx, pt.cy);
+            }
+            ctx.stroke();
+        }
+
+        function drawParticle(x, y, colorStr, radius = 6) {
+            const pt = mapToCanvas(x, y);
+            ctx.fillStyle = colorStr.startsWith('--') ? getComputedStyle(document.body).getPropertyValue(colorStr) : colorStr;
+            ctx.beginPath();
+            ctx.arc(pt.cx, pt.cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Initialize display scaling for clean lines
+        window.addEventListener('resize', () => {
+            if (isRunning) drawAxes();
+        });
+    </script>
+</body>
+</html>
